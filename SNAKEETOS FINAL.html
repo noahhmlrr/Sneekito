@@ -1,0 +1,197 @@
+<html></html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNAKEETOS</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000000;
+        }
+
+        h1 {
+            margin-top: 20px;
+            font-size: 70px;
+            color: #ffffff;
+        }
+
+        canvas {
+            border: 1px solid #7a7a7a;
+            background-color: #7a7a7a;
+            margin-top: 20px;
+        }
+
+        #score {
+            position: fixed;
+            bottom: 100;
+            left: 48,5%;
+            font-size: 30px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        #footer {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        /* Message "Game Over" */
+        #gameOverMessage {
+            display: none;
+            position: fixed;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 50px;
+            padding: 300px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        /* Pour les petits écrans */
+        @media (max-width: 600px) {
+            canvas {
+                width: 90%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>SNAKEETOS</h1>
+    <canvas id="snakeGame" width="400" height="400"></canvas>
+    <p id="score">Score: 0</p>
+
+    <!-- Message Game Over -->
+    <div id="gameOverMessage">Gros Noob!</div>
+
+    <!-- Footer -->
+    <div id="footer">Développé par Noah Muller et Liwei Libanus</div>
+
+    <script>
+        const canvas = document.getElementById("snakeGame");
+        const ctx = canvas.getContext("2d");
+
+        // Taille de chaque case
+        const tailleCase = 20;
+        const largeurCanvas = canvas.width;
+        const hauteurCanvas = canvas.height;
+
+        // Initialisation du serpent
+        let serpent = [{ x: 200, y: 200 }];
+        let direction = "right";
+        let nourriture = { x: 0, y: 0 };
+        let score = 0;
+
+        // Fonction pour générer une nouvelle nourriture
+        function nouvelleNourriture() {
+            nourriture.x = Math.floor(Math.random() * (largeurCanvas / tailleCase)) * tailleCase;
+            nourriture.y = Math.floor(Math.random() * (hauteurCanvas / tailleCase)) * tailleCase;
+        }
+
+        // Fonction pour dessiner le serpent
+        function dessinerSerpent() {
+            serpent.forEach(segment => {
+                ctx.fillStyle = "green";
+                ctx.fillRect(segment.x, segment.y, tailleCase, tailleCase);
+            });
+        }
+
+        // Fonction pour dessiner la nourriture
+        function dessinerNourriture() {
+            ctx.fillStyle = "red";
+            ctx.fillRect(nourriture.x, nourriture.y, tailleCase, tailleCase);
+        }
+
+        // Fonction de mise à jour du score
+        function mettreAJourScore() {
+            document.getElementById("score").textContent = `Score: ${score}`;
+        }
+
+        // Fonction pour afficher le message "Game Over"
+        function afficherGameOver() {
+            document.getElementById("gameOverMessage").style.display = "block";
+        }
+
+        // Fonction pour cacher le message "Game Over"
+        function cacherGameOver() {
+            document.getElementById("gameOverMessage").style.display = "none";
+        }
+
+        // Fonction principale de jeu
+        function jeu() {
+            // Déplacer le serpent
+            const teteSerpent = { ...serpent[0] };
+
+            if (direction === "right") teteSerpent.x += tailleCase;
+            if (direction === "left") teteSerpent.x -= tailleCase;
+            if (direction === "up") teteSerpent.y -= tailleCase;
+            if (direction === "down") teteSerpent.y += tailleCase;
+
+            // Vérification de la collision avec les murs
+            if (
+                teteSerpent.x < 0 ||
+                teteSerpent.x >= largeurCanvas ||
+                teteSerpent.y < 0 ||
+                teteSerpent.y >= hauteurCanvas ||
+                serpent.some(segment => segment.x === teteSerpent.x && segment.y === teteSerpent.y)
+            ) {
+                afficherGameOver();
+                setTimeout(() => {
+                    serpent = [{ x: 200, y: 200 }];
+                    direction = "right";
+                    score = 0;
+                    mettreAJourScore();
+                    nouvelleNourriture();
+                    cacherGameOver();
+                }, 2000);
+                return;
+            }
+
+            // Ajouter la nouvelle tête du serpent
+            serpent.unshift(teteSerpent);
+
+            // Vérifier si le serpent mange la nourriture
+            if (teteSerpent.x === nourriture.x && teteSerpent.y === nourriture.y) {
+                score++;
+                mettreAJourScore();
+                nouvelleNourriture();
+            } else {
+                serpent.pop(); 
+            }
+
+            ctx.clearRect(0, 0, largeurCanvas, hauteurCanvas);
+            dessinerSerpent();
+            dessinerNourriture();
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowUp" && direction !== "down") direction = "up";
+            if (e.key === "ArrowDown" && direction !== "up") direction = "down";
+            if (e.key === "ArrowLeft" && direction !== "right") direction = "left";
+            if (e.key === "ArrowRight" && direction !== "left") direction = "right";
+        });
+
+        nouvelleNourriture();
+        mettreAJourScore();
+        setInterval(jeu, 100);
+    </script>
+</body>
+</html>
